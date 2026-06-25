@@ -219,19 +219,19 @@ Used to confirm checklist deletion before permanently removing a checklist.
 
 ### Checklist List
 
-![Checklist List](./screenshots/checklist-list.png)
+![Checklist List](./checkilst/list.png)
 
 ### Create Checklist Modal
 
-![Create Checklist](./screenshots/checklist-create-modal.png)
+![Create Checklist](./checkilst/create.png)
 
 ### Edit Checklist Modal
 
-![Edit Checklist](./screenshots/checklist-edit-modal.png)
+![Edit Checklist](./checkilst/update.png)
 
 ### Delete Confirmation
 
-![Delete Checklist](./screenshots/checklist-delete-confirm.png)
+![Delete Checklist](./checkilst/delete.png)
 
 > Create a folder named **`screenshots`** in the repo root and upload your screenshots using these exact names:
 
