@@ -1,0 +1,275 @@
+<div class="main-container">
+  <div class="card-container">
+    <div class="header">
+      <div class="header-left">
+        <button class="button1" mat-raised-button color="primary" (click)="openModal()">
+          Create Checklist
+        </button>
+
+        <button class="button1" mat-raised-button color="primary" (click)="routingchecklist()">
+          Ai Checklist
+        </button>
+
+        <div class="checklist-filter-row">
+          <div class="checklist-filter-input-wrapper">
+            <input type="text" [(ngModel)]="filterDetails" placeholder="Search checklist name or creator..."
+              class="checklist-filter-input" aria-label="Search checklists" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <ng-container *ngFor="let doc of visibleDetails; let i = index">
+        <div class="card" [style.animationDelay]="i * 100 + 'ms'">
+          <div class="card-header">
+            <div class="title-section">
+              <h4>
+                <svg class="icon icon-folder" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                </svg>
+                {{ doc.checklistName }}
+              </h4>
+              <div class="updated-at">
+                <br />
+                <svg class="icon icon-meta" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <!-- <span>{{ doc.lastupdatedtime ? (doc.lastupdatedtime | date: 'MMM d ') : 'Not updated yet' }}</span> -->
+                <small class="meta-relative">{{
+                  RelativeTime(doc.lastupdatedtime)
+                  }}</small>
+              </div>
+            </div>
+
+            <div class="meta-block">
+              <div class="meta-label-with-icon">
+                <p class="meta-value">
+                  {{ doc.CreatedAt | date : "MMM d, y" }}<br />
+                </p>
+              </div>
+            </div>
+
+            <span class="file-count-badge">
+              &nbsp;{{ doc.checklistLabels.length }} Files
+            </span>
+          </div>
+          <hr style="border: 1px solid #dbeafe; margin: 1rem 0" />
+
+          <ng-container *ngIf="doc.checklistLabels?.length">
+            <div class="label-section">
+              <h3>Documents</h3>
+              <ng-container *ngFor="
+                  let label of labelShowMoreMap[i]
+                    ? doc.checklistLabels
+                    : doc.checklistLabels.slice(0, 4)
+                ">
+                <div class="label-card">
+                  <mat-icon>chevron_right</mat-icon>
+                  <span>{{ label }}</span>
+                </div>
+              </ng-container>
+
+              <div *ngIf="doc.checklistLabels.length > 4" class="toggle-labels">
+                <button (click)="toggleShow(i)">
+                  {{ labelShowMoreMap[i] ? "Show Less" : "Show More" }}
+                  <svg class="icon toggle-icon" [ngClass]="{ 'rotate-180': labelShowMoreMap[i] }" fill="none"
+                    stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+
+          <div class="card-footer">
+            <div class="created-by">
+              <span class="mdi--account"></span>&nbsp;
+              <span><strong>{{ doc.CreateBy | slice:0:20 }}{{ doc.CreateBy.length > 20 ? '...' : '' }}</strong></span>
+            </div>
+            <div class="action-buttons">
+              <button class="btn-update" (click)="openModal(doc)">
+                <svg class="icon icon-btn" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+              <button class="btn-delete" (click)="confirmDelete(doc.ChecklistID)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <button (click)="prevPage()" [disabled]="currentPage === 1" class="pagination-btn">
+        Prev
+      </button>
+      <ng-container *ngFor="let page of pages">
+        <button (click)="goToPage(page)" [class.active]="page === currentPage" class="pagination-btn">
+          {{ page }}
+        </button>
+      </ng-container>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="pagination-btn">
+        Next
+      </button>
+    </div>
+
+    <div class="footer">
+      <span>Total: {{ details.length }} document{{
+        details.length !== 1 ? "s" : ""
+        }}</span>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showDeleteModal" class="modal-overlay">
+  <div class="modal-box">
+    <h2 class="modal-title">Confirm Deletion</h2>
+    <p class="modal-text">
+      Are you sure you want to delete
+      <strong class="text-red-600">"{{
+        checklistToDelete?.ChecklistName || checklistToDelete?.checklistName
+        }}"</strong>?
+    </p>
+    <div class="modal-buttons">
+      <button mat-raised-button (click)="cancelDelete()">Cancel</button>
+      <button mat-flat-button class="bg-error text-white" (click)="deleteConfirmed()">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="showModal" class="modal-overlay">
+  <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 id="modalTitle" class="modal-title">
+        Select Documents
+        <span class="badge-selected" *ngIf="selectedCount > 0">
+          {{ selectedCount }} selected
+        </span>
+      </h2>
+      <button class="close-button" (click)="closeModal()" aria-label="Close">
+        ✕
+      </button>
+    </div>
+
+    <div *ngIf="loading && !error" class="flex justify-center items-center py-8">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <div *ngIf="!loading && error" class="text-center text-red-500 py-4">
+      Failed to load documents
+    </div>
+
+    <div class="modal-body" [ngClass]="{
+        'show-loading': loading,
+        'show-error': error,
+        'show-documents': !loading && !error
+      }" *ngIf="!loading && !error">
+      <div class="input-group">
+        <div class="input-wrapper">
+          <input id="checklistName" name="ChecklistName" type="text" [(ngModel)]="checklistName" required
+            (ngModelChange)="onChecklistNameChange($event)" placeholder="Enter checklist name"
+            [class.invalid]="isDuplicate || isEmptyName" />
+
+          <div *ngIf="isDuplicate" class="error-message">
+            <p>This checklist name already exists. Please choose another.</p>
+          </div>
+
+          <div *ngIf="isEmptyName" class="error-message">
+            Checklist name is required.
+          </div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <mat-accordion>
+          <mat-expansion-panel class="cardWithShadow" [expanded]="step === 1" hideToggle>
+            <mat-expansion-panel-header>
+              + Create Custom Document
+            </mat-expansion-panel-header>
+
+            <form #f="ngForm" (submit)="$event.preventDefault()">
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Document Name" [(ngModel)]="docName" name="docName" />
+              </mat-form-field>
+              &nbsp;&nbsp;
+              <button type="button" mat-flat-button color="primary" (click)="documentCreate()">
+                Next
+              </button>
+            </form>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+      <div class="input-group" *ngIf="accesstype === '1'">
+        <!-- <mat-label class="f-s-14 f-w-600 m-b-8 d-block">Org Division</mat-label> -->
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-select [(ngModel)]="selectedorgdiv" name="selectedorgdiv" placeholder="Select Division" required>
+            <mat-option *ngIf="orgdivision.length === 0" disabled>No divisions available</mat-option>
+            <mat-option *ngFor="let division of orgdivision" [value]="division.id">
+              {{ division.division_name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-wrapper">
+          <input id="filterType" type="text" [(ngModel)]="filterText" placeholder="Filter by name or type..."
+            class="filter-input" />
+          <span class="filter-icon">
+            <span class="mdi--search"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="document-list">
+        <ng-container *ngFor="let doc of getFilteredDocuments(); trackBy: trackById">
+
+          <label class="document-item" *ngIf="doc.Source !== 'AI' || doc.DisplayDocsName">
+            <input type="checkbox" class="document-checkbox" [checked]="doc.selected" (change)="toggleSelect(doc)" />
+
+            <div class="document-info">
+              <strong>{{ doc.DisplayDocsName || doc.DocsName }}</strong>
+
+              <small class="doc-meta" *ngIf="doc.Type">
+                &nbsp;• {{ doc.Type }}
+              </small>
+
+              <small class="doc-meta" *ngIf="!doc.Type && doc.Source === 'additional'">
+                &nbsp;• Custom
+              </small>
+            </div>
+          </label>
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="button button-cancel" (click)="closeModal()">
+          Cancel
+        </button>
+
+        <button *ngIf="!isEditMode" mat-flat-button (click)="saveSelection()"
+          [disabled]="!hasAnySelected() || isEmptyName || isDuplicate">
+          Save Selection
+          <span *ngIf="selectedCount">({{ selectedCount }})</span>
+        </button>
+
+        <button *ngIf="isEditMode" mat-flat-button (click)="updateChecklist()"
+          [disabled]="!hasAnySelected() || isEmptyName || isDuplicate">
+          Update
+          <span *ngIf="selectedCount">({{ selectedCount }})</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <app-callloader *ngIf="isloading"></app-callloader> -->
